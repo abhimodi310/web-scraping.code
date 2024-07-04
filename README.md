@@ -1,2 +1,178 @@
-# web-scraping.code
+rom tkinter import *
+from tkinter import Scrollbar
+from bs4 import BeautifulSoup
+import requests
+import webbrowser
+
+headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3'}
+
+flipkart=''
+amazon=''
+
+def flipkart(name = ""):
+    try:
+        global flipkart
+        name1 = name.replace(" ","+")   #iphone x  -> iphone+x
+        flipkart=f'https://www.flipkart.com/search?q={name1}&otracker=search&otracker1=search&marketplace=FLIPKART&as-show=off&as=off'
+        res = requests.get(f'https://www.flipkart.com/search?q={name1}&otracker=search&otracker1=search&marketplace=FLIPKART&as-show=off&as=off',headers=headers)
+
+        soup = BeautifulSoup(res.text,'html.parser')
+        flipkart_name = soup.select('._4rR01T')[0].getText().strip()  ### New Class For Product Name
+        flipkart_name = flipkart_name.upper()
+        if name.upper() in flipkart_name:
+            flipkart_price = soup.select('._1_WHN1')[0].getText().strip()  ### New Class For Product Price
+            flipkart_name = soup.select('._4rR01T')[0].getText().strip()
+
+            return f"{flipkart_name}\nPrise : {flipkart_price}\n"
+        else:
+
+            flipkart_price='           Product Not Found'
+        return flipkart_price
+    except:
+
+        flipkart_price= '           Product Not Found'
+    return flipkart_price
+
+
+
+
+def amazon(name):
+    try:
+        global amazon
+        name1 = name.replace(" ","-")
+        name2 = name.replace(" ","+")
+        amazon=f'https://www.amazon.in/{name1}/s?k={name2}'
+        res = requests.get(f'https://www.amazon.in/{name1}/s?k={name2}',headers=headers)
+
+        soup = BeautifulSoup(res.text,'html.parser')
+        amazon_page = soup.select('.a-color-base.a-text-normal')
+        amazon_page_length = int(len(amazon_page))
+        for i in range(0,amazon_page_length):
+            name = name.upper()
+            amazon_name = soup.select('.a-color-base.a-text-normal')[i].getText().strip().upper()
+            if name in amazon_name[0:20]:
+                amazon_name = soup.select('.a-color-base.a-text-normal')[i].getText().strip().upper()
+                amazon_price = soup.select('.a-price-whole')[i].getText().strip().upper()
+
+                break
+            else:
+                i+=1
+                i=int(i)
+                if i==amazon_page_length:
+
+                    amazon_price = '           Product Not Found'
+                    break
+        return f"{amazon_name}\nPrise : {amazon_price}\n"
+    except:
+
+        amazon_price = '           Product Not Found'
+    return amazon_price
+
+
+
+def convert(a):
+    b=a.replace(" ",'')
+    c=b.replace("INR",'')
+    d=c.replace(",",'')
+    f=d.replace("₹",'')
+    g=int(float(f))
+    return g
+
+
+def urls():
+    global flipkart
+    global amazon
+    return f"{flipkart}\n\n\n\n\n\n{amazon}\n\n\n"
+
+
+
+def open_url(event):
+        global flipkart
+        global amazon
+        webbrowser.open_new(flipkart)
+        webbrowser.open_new(amazon)
+
+def search():
+    box1.insert(1.0,"Loding...")
+    
+    box4.insert(1.0,"Loding...")
+    
+    box6.insert(1.0,"Loding...")
+
+
+    search_button.place_forget()
+
+
+    box1.delete(1.0,"end")
+
+    box4.delete(1.0,"end")
+    box6.delete(1.0,"end")
+
+    t1=flipkart(product_name.get())
+    box1.insert(1.0,t1)
+
+
+
+
+    t4=amazon(product_name.get())
+    box4.insert(1.0,t4)
+
+
+    t6 = urls()
+    box6.insert(1.0,t6)
+
+    
+
+
+window = Tk()
+window['background']='Green'
+window.wm_title("Web Scraping")
+window.minsize(1200,1200)
+
+lable_one =  Label(window, text="Enter Product Name :", font=("courier", 10))
+lable_one['background']='sea green'
+lable_one.place(relx=0.2, rely=0.1, anchor="center")
+
+product_name =  StringVar()
+product_name_entry =  Entry(window, textvariable=product_name, width=50)
+product_name_entry.place(relx=0.5, rely=0.1, anchor="center")
+
+search_button =  Button(window, text="Search", width=12, command= search)
+search_button.place(relx=0.5, rely=0.2, anchor="center")
+
+
+l1 =  Label(window, text="flipkart", font=("courier", 20))
+l2 =  Label(window, text="amazon", font=("courier", 20))
+l3 =  Label(window, text="All urls", font=("courier", 20))
+l4 =  Label(window, text="Loding.....", font=("courier", 30))
+l1['background']='sea green'
+l2['background']='sea green'
+l3['background']='sea green'
+l4['background']='sea green'
+
+l1.place(relx=0.1, rely=0.3, anchor="center")
+
+l2.place(relx=0.1, rely=0.6, anchor="center")
+l4.place(relx=0.8, rely=0.6, anchor="center")
+
+scrollbar = Scrollbar(window)
+box1 =  Text(window, height=7, width=50, yscrollcommand=scrollbar.set)
+box1['bg'] = 'medium sea green'
+
+
+box4 =  Text(window, height=7, width=50, yscrollcommand=scrollbar.set)
+box4['bg'] = 'medium sea green'
+
+
+
+box1.place(relx=0.2, rely=0.4, anchor="center")
+box4.place(relx=0.2, rely=0.7, anchor="center")
+
+box6 =  Text(window, height=15, width=50, yscrollcommand=scrollbar.set, fg="blue", cursor="hand2")
+box6.place(relx=0.8, rely=0.8, anchor="center")
+box6['bg'] = 'medium sea green'
+box6.bind("<Button-1>", open_url)
+
+
+window.mainloop()# web-scraping.code
 My Project is web Scraping in python 
